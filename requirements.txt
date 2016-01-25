@@ -1,0 +1,6 @@
+requests[security]
+pronouncing
+lxml
+beautifulsoup4
+pymongo
+nltk
