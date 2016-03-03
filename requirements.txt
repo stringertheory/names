@@ -7,3 +7,7 @@ nltk
 -e git+https://github.com/datascopeanalytics/traces.git#egg=traces
 spacy
 PyWavelets
+ipdb
+pyenchant
+unidecode
+termcolor

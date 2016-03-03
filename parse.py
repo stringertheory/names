@@ -35,6 +35,19 @@ def parse_author(author_span):
         result['POET'] = name
     return result
 
+def parse_text(poem_div):
+    result = []
+    for div in poem_div.find_all('div'):
+        sentence = div.get_text().rstrip()
+        result.append(sentence)
+
+    if not result:
+        text = poem_div.get_text().rstrip()
+        if text:
+            result = [text]
+
+    return result
+
 collection = mongo_collection()
 directory = sys.argv[1]
 filename_list = os.listdir(directory)
@@ -52,7 +65,7 @@ for index, filename in enumerate(filename_list):
         if not about_div:
             about_div = soup.find('div', {'id': 'about'})
         metadata = parse_about(about_div)
-        text = poem_div.get_text().strip()
+        text = parse_text(poem_div)
         item = {
             '_id': filename,
             'title': title,
