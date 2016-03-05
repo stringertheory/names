@@ -3,7 +3,8 @@ import numpy as np
 import sys
 import pprint
 import string
-
+import collections
+import functools32
 import termcolor
 import enchant
 import pymongo
@@ -14,128 +15,130 @@ import unicodedata
 import pywt
 import unidecode
 
+import distance
+import poem_ids
+
 def mongo_collection():
     collection = pymongo.MongoClient().poetry.poems
     return collection
 
-CHICAGO = "2043"
-TRW = "174770"
-WOODS = "171621"
-ROAD = "173536"
-SHAKE = "174354"
-STATS = "171441"
-LONG = "174987"
-MILTON = "181064"
-SHEL = "243466"
-POEM_ID = LONG
-
+NO_PHONES = open('NO_PHONES.txt', 'a')
+ACCEPTED_SUGGESTIONS = open('ACCEPTED_SUGGESTIONS.txt', 'a')
 US_DICTIONARY = enchant.request_dict("en_US")
 
-def normalize(sentence):
+
+def word_tokenize(sentence):
     ascii_version = unidecode.unidecode(sentence.lower())
     word_list = []
     for word in ascii_version.split():
-        stripped_word = word.strip(string.punctuation)
-        word = stripped_word.replace("'", "")
-        if '-' in word:
-            for word in word.split('-'):
-                word_list.append(word)
-        else:
-            word_list.append(word)
-    plain = ' '.join(word_list)
-    return plain
+        stripped = word.strip(string.punctuation).strip()
+        if stripped:
+            word_list.append(stripped)
+    return word_list
 
-def stress_pattern(sentence):
+def phones_for_suggestion(with_spaces):
 
-    print >> sys.stderr, sentence
-    
-    phone_list = []
-    stress_list = []
-    new_sentence_list = []
-    for original_word in sentence.split():
-
-        phones = pronouncing.phones_for_word(original_word)
-
-        word = original_word
-        if not phones:
-
-            # first try removing internal apostrophe
-            word = original_word.replace("'", "")
-            
-            suggestions = US_DICTIONARY.suggest(word)
-            print >> sys.stderr, suggestions
-
-            for word in suggestions:
-
-                success = True
-                if ' ' in word:
-                    combined = []
-                    for maybe in word.split():
-                        phones = pronouncing.phones_for_word(maybe)
-                        if not phones:
-                            success = False
-                            break
-                        else:
-                            combined.append(phones[0])
-                    
-                phones = pronouncing.phones_for_word(word)
-                if phones:
-                    print >> sys.stderr, 'corrected %s to %s' % \
-                        (original_word, word)
-                    break
-
-            if word == original_word:
-                
-                suggestions = US_DICTIONARY.suggest(original_word)
-                print >> sys.stderr, suggestions
-
-                for word in suggestions:
-                    phones = pronouncing.phones_for_word(word)
-                    if phones:
-                        print >> sys.stderr, 'corrected %s to %s' % \
-                            (original_word, word)
-                        break
-                
-        new_sentence_list.append(word)
-            
-        stresses = ''
+    success = True
+    result = []
+    for part in with_spaces.split():
+        phones = pronouncing.phones_for_word(part)
         if phones:
-            first_phone = phones[0]
-            phone_list.append(first_phone)
-            stresses = pronouncing.stresses(first_phone)
-            stress_list.append(stresses)
-    
-    signal = []
-    for char in ''.join(stress_list):
-        signal.append(int(char) % 2)
-
-    print >> sys.stderr, ' '.join(new_sentence_list)
-    print >> sys.stderr, signal, len(signal)
-    print >> sys.stderr, ''
+            result.append(phones[0])
+        else:
+            success = False
+            break
         
-    return signal
+    if success:
+        phones = [' '.join(result)]
+    else:
+        phones = []
+
+    return phones
+
+def phones_for_sentence(word_list):
+    
+    approximate_words = []
+    phones_list = []
+    for word in word_list:
+
+        replacement, phones = distance.phones_for_word(word)
+
+        approximate_words.append(replacement)
+
+        # for now, just pick first alternative from list
+        phones_list.append(phones[0])
+
+    return approximate_words, phones_list
+        
+def stress_pattern(phones):
+    return pronouncing.stresses(''.join(p for p in phones))
+
+IGNORE = set([
+    '172777', # beowulf
+])
 
 collection = mongo_collection()
-for document in collection.find({"_id": POEM_ID}, limit=1):
+# for document in collection.find({"_id": poem_ids.POEM_ID}, limit=1):
+for document in collection.find(None, limit=1):
 
-    print document
+    print >> sys.stderr, document['_id']
+
+    normalized = [word_tokenize(sentence) for sentence in document['text']]
+    approximate = []
+    phones = []
+    for sentence in normalized:
+        a, p = phones_for_sentence(sentence)
+        approximate.append(a)
+        phones.append(p)
+    stresses = [stress_pattern(sentence) for sentence in phones]
+    print len(normalized), len(approximate), len(phones), len(stresses)
+    analyzed = []
+    for n, a, p in zip(normalized, approximate, phones):
+        sentence = []
+        for n_, a_, p_ in zip(n, a, p):
+            word = {
+                'ascii': n_,
+                'closest': a_,
+                'phones': p_,
+            }
+            sentence.append(word)
+        analyzed.append(sentence)
     
-    pprint.pprint(document['text'], sys.stderr)
-
-    normalized = [normalize(sentence) for sentence in document['text']]
-
-    stresses = [stress_pattern(sentence) for sentence in normalized]
-
+    document['analyzed'] = analyzed
+    document['stresses'] = stresses
+    collection.save(document)
+    
+    row_list = []
     for signal in stresses:
+        terminal = []
         block_list = []
         for i in signal:
-            if i:
-                block_list.append(termcolor.colored(' ', 'green', 'on_blue'))
+            if int(i):
+                block_list.append('<div class="diagram stressed"></div>')
+                terminal.append(termcolor.colored('  ', 'green', 'on_blue'))
             else:
-                block_list.append(termcolor.colored(' ', 'green', 'on_yellow'))
-                                
-        print ''.join(block_list)
-        
+                terminal.append(termcolor.colored('  ', 'green', 'on_yellow'))
+                block_list.append('<div class="diagram unstressed"></div>')
+
+        row = '<div class="diagram sentence">%s</div>' % ''.join(block_list)
+        row_list.append(row)
+        print >> sys.stderr, ''.join(terminal)
+
+    diagram = '<div class="diagram container">%s</div>' % ''.join(row_list)
+
+    with open('formatted/%s.html' % document['_id'], 'w') as outfile:
+        outfile.write('<html>')
+        outfile.write('<head>')
+        outfile.write('<link rel="stylesheet" type="text/css" href="diagram.css">')
+        outfile.write('</head>')
+        outfile.write('<body>')
+        outfile.write(document['html'].encode('utf8'))
+        outfile.write('\n')
+        outfile.write(diagram)
+        outfile.write('\n')
+        outfile.write('</body>')
+        outfile.write('</html>')
+
     # c_a, c_d = pywt.dwt(signal, 'haar')
     #     for i, j in enumerate(signal):
     #         print i, j
@@ -156,3 +159,4 @@ for document in collection.find({"_id": POEM_ID}, limit=1):
 
     # for x, y in zip(freqs[idx], ps[idx]):
     #     print x, y
+

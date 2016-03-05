@@ -37,7 +37,7 @@ def parse_author(author_span):
 
 def parse_text(poem_div):
     result = []
-    for div in poem_div.find_all('div'):
+    for div in poem_div.find_all(['div', 'br']):
         sentence = div.get_text().rstrip()
         result.append(sentence)
 
@@ -70,6 +70,7 @@ for index, filename in enumerate(filename_list):
             '_id': filename,
             'title': title,
             'text': text,
+            'html': poem_div.decode(formatter='html'),
         }
         item.update(authordata)
         item.update(metadata)
