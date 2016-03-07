@@ -73,25 +73,27 @@ def phones_for_sentence(word_list):
 def stress_pattern(phones):
     return pronouncing.stresses(''.join(p for p in phones))
 
-IGNORE = set([
-    '172777', # beowulf
-])
-
 collection = mongo_collection()
-# for document in collection.find({"_id": poem_ids.POEM_ID}, limit=1):
-for document in collection.find(None, limit=1):
-
-    print >> sys.stderr, document['_id']
-
+for document in collection.find(no_cursor_timeout=True).sort("_id", pymongo.DESCENDING).batch_size(5):
+    
+    if 'analyzed' in document:
+        print >> sys.stderr, 'skipping %s' % document['_id']
+        continue
+    else:
+        print >> sys.stderr, 'analyzing %s' % document['_id']
+    
     normalized = [word_tokenize(sentence) for sentence in document['text']]
+
     approximate = []
     phones = []
     for sentence in normalized:
         a, p = phones_for_sentence(sentence)
         approximate.append(a)
         phones.append(p)
+
     stresses = [stress_pattern(sentence) for sentence in phones]
-    print len(normalized), len(approximate), len(phones), len(stresses)
+
+    # zip up for easier storage
     analyzed = []
     for n, a, p in zip(normalized, approximate, phones):
         sentence = []

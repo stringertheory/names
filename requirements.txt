@@ -1,5 +1,5 @@
 requests[security]
-pronouncing
+-e git+https://github.com/stringertheory/pronouncingpy.git#egg=pronouncing
 lxml
 beautifulsoup4
 pymongo
@@ -11,3 +11,6 @@ ipdb
 pyenchant
 unidecode
 termcolor
+cprofilev
+functools32
+editdistance
