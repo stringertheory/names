@@ -1,31 +1,17 @@
-from __future__ import division
-import numpy as np
 import sys
-import pprint
 import string
-import collections
-import functools32
 import termcolor
-import enchant
 import pymongo
-import collections
-from nltk.tokenize import word_tokenize
 import pronouncing
-import unicodedata
-import pywt
 import unidecode
 
 import distance
-import poem_ids
+
+# a decorator that caches functions but stores results with a db backend would be nice.
 
 def mongo_collection():
     collection = pymongo.MongoClient().poetry.poems
     return collection
-
-NO_PHONES = open('NO_PHONES.txt', 'a')
-ACCEPTED_SUGGESTIONS = open('ACCEPTED_SUGGESTIONS.txt', 'a')
-US_DICTIONARY = enchant.request_dict("en_US")
-
 
 def word_tokenize(sentence):
     ascii_version = unidecode.unidecode(sentence.lower())
@@ -35,25 +21,6 @@ def word_tokenize(sentence):
         if stripped:
             word_list.append(stripped)
     return word_list
-
-def phones_for_suggestion(with_spaces):
-
-    success = True
-    result = []
-    for part in with_spaces.split():
-        phones = pronouncing.phones_for_word(part)
-        if phones:
-            result.append(phones[0])
-        else:
-            success = False
-            break
-        
-    if success:
-        phones = [' '.join(result)]
-    else:
-        phones = []
-
-    return phones
 
 def phones_for_sentence(word_list):
     
