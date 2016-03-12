@@ -35,7 +35,7 @@ def index():
     poems = mongo.db.poems.find(None, {'_id': True, 'title': True})
     return render_template('index.html', poems=poems)
 
-@app.route('/poem/<id>')
+@app.route('/poem/<id>/')
 def poem(id):
     poem = mongo.db.poems.find_one({'_id': id})
     return render_template('poem.html', poem=poem)
