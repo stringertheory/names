@@ -1,0 +1,34 @@
+@import "bootstrap-variables";
+@import "bootstrap";
+
+$size: 18px;
+
+.poem {
+  line-height: $size;
+  font-size: $size;
+  h3 {
+    white-space: nowrap;
+  }
+}
+.word {
+  line-height: $size;
+  display: inline-block;
+  width: $size;
+  height: $size;
+  border-right: 1px solid mix(#a6cee3, #fff);
+  border-bottom: 1px solid mix(#a6cee3, #fff);
+  &.stress-0 {
+    background: #a6cee3;
+  }
+  &.stress-1 {
+    background: #1f78b4;
+  }
+  &.stress-2 {
+    background: mix(#a6cee3, #1f78b4);
+  }
+}
+.sentence {
+  display: block;
+  line-height: $size;
+  height: $size;
+}

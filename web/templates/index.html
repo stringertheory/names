@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+  <h2>Poems</h2>
+  <ol>
+  {% for poem in poems %}
+  <li>
+    <a href="{{ url_for("poem", id=poem['_id']) }}">{{poem._id}}&mdash;{{ poem.title }}</a>
+  </li>
+  {% else %}
+  <li>No poems.</li>
+  {% endfor %}
+</ol>
+</div>
+{% endblock content %}
