@@ -32,3 +32,12 @@ $size: 18px;
   line-height: $size;
   height: $size;
 }
+.rhyme-word {
+  margin-right: 0.5em;
+  &.primary {
+    background: #b3e2cd;
+  }
+  &.secondary {
+    background: #cbd5e8;
+  }
+}

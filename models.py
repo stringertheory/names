@@ -43,6 +43,7 @@ class Poem(object):
             rhymes_a = utils.rhymes(word_a)
             for position_b, word_b in positions[(index+1):]:
                 if word_b in rhymes_a:
+                    print word_a, word_b, position_a, position_b
                     key = '%i,%i' % position_a
                     value = '%i,%i' % position_b
                     try:

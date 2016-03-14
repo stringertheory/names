@@ -2,6 +2,12 @@ import sys
 import pymongo
 from models import Poem
 import pprint
+import utils
+import pronouncing
+
+print pronouncing.rhymes('a')
+print pronouncing.rhymes('the')
+raise 'STOp'
 
 db = pymongo.MongoClient().poetry
 

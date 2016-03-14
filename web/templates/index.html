@@ -6,7 +6,7 @@
   <ol>
   {% for poem in poems %}
   <li>
-    <a href="{{ url_for("poem", id=poem['_id']) }}">{{poem._id}}&mdash;{{ poem.title }}</a>
+    <a href="{{ url_for("poem", _id=poem['_id']) }}">{{poem._id}}&mdash;{{ poem.title }}</a>
   </li>
   {% else %}
   <li>No poems.</li>

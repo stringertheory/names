@@ -1,15 +1,18 @@
 {% extends "base.html" %}
 
 {% block content %}
+<script>
+  var POEM_ID = {{poem._id}};
+</script>
 <div class="container">
-  <div class="poem col-md-6">
+  <div id="metadata" class="col-md-12">
     <h4>{{ poem.POET.0 }}</h4>
     <h3>{{ poem.title }}</h3>
+  </div>
+  <div id="poem" class="col-md-6">
     {{ poem.html|safe }}
   </div>
-  <div class="meter col-md-6">
-    <h4>&nbsp;</h4>
-    <h3>&nbsp;</h3>
+  <div id="meter" class="col-md-6">
     <div class="">
       {% for sentence in poem.stresses %}
       <div class="sentence">
@@ -20,17 +23,8 @@
       {% endfor %}
     </div>
   </div>
-  <!-- <div class="rhyme col-md-1"> -->
-  <!--   <h2>Rhyme</h2> -->
-  <!--   <div class=""> -->
-  <!--     {% for sentence in poem.stresses %} -->
-  <!--     <div class="sentence"> -->
-  <!-- 	{% for word in sentence %} -->
-  <!-- 	<div class="word stress-{{word}}"></div> -->
-  <!-- 	{% endfor %} -->
-  <!--     </div> -->
-  <!--     {% endfor %} -->
-  <!--   </div> -->
-  <!-- </div> -->
+  <div id="rhyme" class="col-md-12">
+    <h4>Rhyme</h4>
+  </div>
 </div>
 {% endblock content %}
