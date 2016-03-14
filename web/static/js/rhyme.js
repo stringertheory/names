@@ -3,6 +3,18 @@
   var url = '/data/' + POEM_ID + '.json';
   $.getJSON(url, function (data) {
 
+    jsPlumb.importDefaults({
+      // PaintStyle:{ 
+      // 	lineWidth: 3,
+      // 	strokeStyle: '#1f78b4'
+      // },
+      Connector:[ "Bezier", { curviness: 100 } ],
+      // Connector:[ "Straight" ],
+      Endpoint:[ "Dot", { radius: 1 } ],
+      // EndpointStyle : { fillStyle: '#1f78b4'  },
+      Anchor : "Center"
+    });
+    
     var lookup = {}
     _.each(data.analyzed, function (sentence, s_i) {
 
@@ -55,18 +67,29 @@
 	_.each(data.rhymes[key], function (key) {
 	  rhyme_words.push(lookup[key]);
 	});
-	word.mouseenter(function () {
-	  word.addClass('primary');
-	  _.each(rhyme_words, function (word) {
-	    word.addClass('secondary');
+
+	_.each(rhyme_words, function (other_word) {
+	  jsPlumb.connect({ 
+	    source: word,
+	    target: other_word,
+	    cssClass: 'bunga'
 	  });
 	});
-	word.mouseleave(function () {
-	  word.removeClass('primary');
-	  _.each(rhyme_words, function (word) {
-	    word.removeClass('secondary');
-	  });
-	});
+	
+	// word.mouseenter(function () {
+	//   word.addClass('primary');
+	//   _.each(rhyme_words, function (other_word) {
+	//     other_word.addClass('secondary');
+	//   });
+	// });
+
+	// word.mouseleave(function () {
+	//   word.removeClass('primary');
+	//   _.each(rhyme_words, function (other_word) {
+	//     other_word.removeClass('secondary');
+	//   });
+	// });
+	
       });
     });
     
