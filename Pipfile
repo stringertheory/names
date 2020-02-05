@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+requests = "*"
+requests-cache = "*"
+beautifulsoup4 = "*"
+lxml = "*"
+flask = "*"
+frozen-flask = "*"
+flask-assets = "*"
+flask-pymongo = "*"
+jsmin = "*"
+
+[requires]
+python_version = "3.8"

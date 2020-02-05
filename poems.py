@@ -1,67 +1,143 @@
-import os
-import sys
-import urlparse
+import pprint
+import json
+import bs4
 import time
 import random
-
+import sys
+import collections
 import requests
-import bs4
+import requests_cache
+requests.exceptions.ConnectTimeout
 
-FILENAME = 'Dropbox/poems-urls.txt'
-BASE_URL = 'http://www.poetryfoundation.org/searchresults'
-HEADERS = {
-    'User-Agent': (
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_5) '
-        'AppleWebKit/537.36 (KHTML, like Gecko) '
-        'Chrome/37.0.2062.124 Safari/537.36'
-    ),
-    'Referer': 'http://www.poetryfoundation.org/browse/',
-    'X-Requested-With': 'XMLHttpRequest',
+def make_throttle_hook(wait_factor=1, n_average=3):
+    waits = collections.deque(maxlen=n_average)
+    def hook(response, *args, **kwargs):
+        if not wait_factor:
+            return response
+        if not getattr(response, 'from_cache', False):
+            waits.append(response.elapsed.total_seconds())
+            average_wait = wait_factor * sum(waits) / len(waits)
+            this_wait = random.expovariate(1 / average_wait)
+            msg = (
+                f'{average_wait:.02f} elapsed, '
+                f'waiting for {this_wait:.02f} seconds'
+            )
+            print(msg, file=sys.stderr)
+            time.sleep(this_wait)
+        else:
+            msg = f'got {response.url} from cache'
+            print(msg, file=sys.stderr)
+        return response
+    return hook
+
+
+class CachedSession(requests_cache.CachedSession):
+
+    def delete_url(self, url, params=None):
+        request = requests.Request('GET', url, params=params)
+        return self.cache.delete_url(self.prepare_request(request).url)
+
+session = CachedSession(cache_name='poetryfoundation')
+session.hooks = {
+    'response': make_throttle_hook(1),
 }
 
-def read_url_set(filename):
-    result = set()
-    if os.path.isfile(filename):
-        with open(filename) as infile:
-            for line in infile:
-                result.add(line.strip())
-    return result
 
-def add_new_urls(url, url_set):
-    params = {
-        'page': 1,
+url = "https://www.poetryfoundation.org/ajax/poems"
+params = {
+    'page': 1,
+    'sort_by': 'recently_added',
+}
+headers = {
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br",
+    "accept-language": "en-US,en;q=0.9",
+    "authority": "www.poetryfoundation.org",
+    "referer": "https://www.poetryfoundation.org/poems/browse",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "user-agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/79.0.3945.130 Safari/537.36"
+    )
+}
+
+def parse_poem(response, entry):
+
+    soup = bs4.BeautifulSoup(response.text, 'lxml')
+
+    schema_data = json.loads(
+        soup.find('script', {'type': 'application/ld+json'}).contents[0]
+    )
+    poem_schema = {}
+    for node in schema_data.get('@graph', []):
+        if node.get('@type') == 'CreativeWork':
+            poem_schema = node
+
+    author = poem_schema.get('author', {}).get('name')
+    title = poem_schema.get('name')
+    text = poem_schema.get('text')
+
+    poem_div = soup.find('div', {'class': 'o-poem'})
+    html = poem_div.decode(formatter='html')
+
+    tag_id_set = set()
+    tags = []
+    sidecar = soup.find('div', {'class': 'c-sidecar-panel'})
+    if sidecar:
+        for ul in sidecar.find_all('ul', {'class': 'o-hList'}):
+            for li in ul.find_all('li'):
+                if li.a:
+                    _, tag_string = li.a['href'].rsplit('#', 1)
+                    tag_type, tag_number = tag_string.split('=')
+                    tag_id = int(tag_number)
+                    tag_title = li.get_text().strip()
+                    tags.append({
+                        'id': tag_id,
+                        'type': tag_type,
+                        'title': tag_title,
+                    })
+                    tag_id_set.add(tag_id)
+
+    for category in entry.get('categories', []):
+        tag_id = category.get('id')
+        if tag_id and tag_id not in tag_id_set:
+            tags.append({
+                'id': tag_id,
+                'title': category.get('title'),
+            })
+                    
+    return {
+        '_id': entry.get('id'),
+        'url': entry.get('link'),
+        'author': author,
+        'title': title,
+        'text': text,
+        'html': html,
+        'tags': tags,
     }
-    finished = False
-    while not finished:
-        new_url_set = set()
-        print >> sys.stderr, url, params
-        response = requests.get(url, headers=HEADERS, params=params)
-        soup = bs4.BeautifulSoup(response.text, "lxml")
-        a_list = soup.find_all('a', {'class': 'title'})
-        if a_list:
-            for a_element in a_list:
-                poem_url = urlparse.urljoin(BASE_URL, a_element['href']).strip()
-                new_url_set.add(poem_url)
-        else:
-            finished = True
-
-        for poem_url in new_url_set:
-            if poem_url in url_set:
-                finished = True
-            url_set.add(poem_url)
-
-        params['page'] += 1
-        time.sleep(0.1 + 0.1 * random.random())
     
-def write_url_set(url_set, filename):
-    with open(filename, 'w') as outfile:
-        for url in sorted(url_set):
-            outfile.write(url + '\n')
-        
-url_set = read_url_set(FILENAME)
+TIMEOUT = 5
+while True:
+    response = session.get(url, params=params, headers=headers)
+    print(response.url)
+    data = response.json()
+    params['page'] += 1
 
-add_new_urls(BASE_URL, url_set)
+    for entry in data.get('Entries', []):
+        link = entry.get('link')
+        if link:
+            try:
+                entry_response = session.get(link, timeout=TIMEOUT)
+            except:
+                continue
+            else:
+                print(entry_response.url)
 
-print url_set
-
-write_url_set(url_set, FILENAME)
+            # pprint.pprint(parse_poem(entry_response, entry))
+            # if 'blossoms-haiku-senryu' in entry_response.url:
+            #     raise 'STOP'
+    
+    if not data.get('Entries'):
+        break

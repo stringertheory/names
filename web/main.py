@@ -3,8 +3,8 @@ import os
 
 from flask import Flask, render_template, request, send_from_directory, json
 from flask_frozen import Freezer
-from flask.ext.assets import Environment, Bundle
-from flask.ext.pymongo import PyMongo
+from flask_assets import Environment, Bundle
+from flask_pymongo import PyMongo
 from webassets.filter import get_filter
 
 app = Flask(__name__)

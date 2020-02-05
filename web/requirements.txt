@@ -1,5 +1,0 @@
-Flask
-Frozen-Flask
-Flask-Assets
-Flask-PyMongo
-jsmin
