@@ -7,7 +7,7 @@ import sys
 import collections
 import requests
 import requests_cache
-requests.exceptions.ConnectTimeout
+import pymongo
 
 def make_throttle_hook(wait_factor=1, n_average=3):
     waits = collections.deque(maxlen=n_average)
@@ -20,7 +20,8 @@ def make_throttle_hook(wait_factor=1, n_average=3):
             this_wait = random.expovariate(1 / average_wait)
             msg = (
                 f'{average_wait:.02f} elapsed, '
-                f'waiting for {this_wait:.02f} seconds'
+                f'waiting for {this_wait:.02f} seconds '
+                f'{response.url}'
             )
             print(msg, file=sys.stderr)
             time.sleep(this_wait)
@@ -75,12 +76,23 @@ def parse_poem(response, entry):
         if node.get('@type') == 'CreativeWork':
             poem_schema = node
 
+    # for un-OCR'ed poems
+    if not poem_schema:
+        return {
+            '_id': entry.get('id'),
+            'url': entry.get('link'),
+        }
+            
     author = poem_schema.get('author', {}).get('name')
     title = poem_schema.get('name')
     text = poem_schema.get('text')
 
     poem_div = soup.find('div', {'class': 'o-poem'})
-    html = poem_div.decode(formatter='html')
+    try:
+        html = poem_div.decode(formatter='html')
+    except:
+        import pdb
+        pdb.set_trace()
 
     tag_id_set = set()
     tags = []
@@ -117,16 +129,32 @@ def parse_poem(response, entry):
         'html': html,
         'tags': tags,
     }
-    
+
+db_client = pymongo.MongoClient()
+db = db_client.poetry
+db_collection = db.poems
+
+update_with_latest = False
+
 TIMEOUT = 5
 while True:
-    response = session.get(url, params=params, headers=headers)
-    print(response.url)
+
+    if update_with_latest:
+        with session.cache_disabled():
+            response = session.get(url, params=params, headers=headers)
+    else:
+        response = session.get(url, params=params, headers=headers)
+
+    print('', file=sys.stderr)
+    print(response.url, file=sys.stderr)
     data = response.json()
     params['page'] += 1
 
+    already_downloaded = False
     for entry in data.get('Entries', []):
+
         link = entry.get('link')
+
         if link:
             try:
                 entry_response = session.get(link, timeout=TIMEOUT)
@@ -134,10 +162,18 @@ while True:
                 continue
             else:
                 print(entry_response.url)
+                if entry_response.from_cache and update_with_latest:
+                    already_downloaded = True
 
-            # pprint.pprint(parse_poem(entry_response, entry))
-            # if 'blossoms-haiku-senryu' in entry_response.url:
-            #     raise 'STOP'
+            query = {'_id': entry.get('id')}
+            document = db_collection.find_one(query)
+            if not document:
+                try:
+                    parsed = parse_poem(entry_response, entry)
+                except:
+                    raise
+                else:
+                    print(db_collection.insert_one(parsed).inserted_id)
     
-    if not data.get('Entries'):
+    if not data.get('Entries') or already_downloaded:
         break
