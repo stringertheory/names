@@ -759,13 +759,13 @@ class Analyzer:
 
 form = cgi.FieldStorage();
 
-if form.has_key("quine"):
-    print "Content-Type: text\n\r\n\r";
+if "quine" in form:
+    print("Content-Type: text\n\r\n\r");
     f = open(os.path.join(sys.path[0], sys.argv[0]))
-    print f.read()
+    print(f.read())
     quit()
 
-if form.has_key("text"):
+if "text" in form:
     text = form["text"].value.replace("%u2019", "'").replace("%u2014", " -- ");
     text = text.replace("%u201C", '"' ).replace("%u201D",'"')
     text = text.replace("%u2013", '--' )
@@ -774,22 +774,22 @@ else:
 
 def json(obj,name=None):
     if name:
-        print "%s:" % (name),
+        print("%s:" % (name), end=' ')
     
     if isinstance(obj,list):
-        print "[",
+        print("[", end=' ')
         first = True
         for elem in obj:
-            if not first: print ",",
+            if not first: print(",", end=' ')
             first = False
             json(elem)
-        print "]",
+        print("]", end=' ')
     elif isinstance(obj,str):
-        print "\"%s\"" % obj.replace("\"","\\\""),
+        print("\"%s\"" % obj.replace("\"","\\\""), end=' ')
     elif isinstance(obj,int):
-        print obj,
+        print(obj, end=' ')
 
-print "Content-Type: text/html\n\r\n\r";
+print("Content-Type: text/html\n\r\n\r");
 
 an = Analyzer()
 out = []

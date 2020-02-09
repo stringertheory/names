@@ -1,4 +1,4 @@
-from __future__ import division
+
 import numpy as np
 import sys
 
@@ -17,8 +17,8 @@ for i in range(len(signal)):
         
 c_a, c_d = pywt.dwt(signal, 'haar')
 for i, j in enumerate(signal):
-    print i, j
-print ''
+    print(i, j)
+print('')
 # for i in c_a:
 #     print i
 # print ''
@@ -30,8 +30,8 @@ ps = np.abs(np.fft.fft(signal))**2
 #     print i, j
 time_step = 1 / 1
 freqs = np.fft.fftfreq(len(signal), time_step)
-print >> sys.stderr, freqs
+print(freqs, file=sys.stderr)
 idx = np.argsort(freqs)
 
 for x, y in zip(freqs[idx], ps[idx]):
-    print x, y
+    print(x, y)

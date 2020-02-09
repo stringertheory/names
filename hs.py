@@ -23,5 +23,5 @@ def parse_cmu(cmufh):
 
 import sys
 with open(sys.argv[1]) as infile:
-    for i in parse_cmu(infile).iteritems():
-        print i
+    for i in parse_cmu(infile).items():
+        print(i)

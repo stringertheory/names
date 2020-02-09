@@ -1,5 +1,5 @@
 import sys
-import urlparse
+import urllib.parse
 import os
 
 outfile_list = []
@@ -23,12 +23,12 @@ for stub in os.listdir(done_directory):
     url = all_urls.pop(stub, None)
 
 counter = 0
-for stub, url in sorted(all_urls.iteritems()):
+for stub, url in sorted(all_urls.items()):
     index = counter % n_files
     outfile_list[index].write(url + '\n')
     counter += 1
 
-print len(all_urls)
+print(len(all_urls))
             
 for outfile in outfile_list:
     outfile.close()

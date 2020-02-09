@@ -37,7 +37,7 @@ def _normalize_word(word):
 
 # Read our syllable override file and stash that info in the cache
 in_syll = open(syllable_path)
-for line in in_syll.xreadlines():
+for line in in_syll:
     line = line.strip()
     if line:
         toks = line.split()

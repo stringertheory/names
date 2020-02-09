@@ -12,8 +12,8 @@ db = pymongo.MongoClient().poetry
 
 for index, document in enumerate(db.poems.find().limit(limit).skip(skip)):
     
-    print 'process %i of %i, document %i of %i (_id: %s)' % \
-        (chunk_index + 1, n_chunks, index, limit, document['_id'])
+    print('process %i of %i, document %i of %i (_id: %s)' % \
+        (chunk_index + 1, n_chunks, index, limit, document['_id']))
 
     poem = Poem(document, db)
     poem.set_rhymes()

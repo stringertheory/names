@@ -18,5 +18,5 @@ query = {
 for document in collection.find(query, no_cursor_timeout=True):
     for sentence in document['analyzed']:
         for word in sentence:
-            print word['closest'],
-        print ''
+            print(word['closest'], end=' ')
+        print('')

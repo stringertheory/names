@@ -23,7 +23,7 @@ for document in collection.find(query, no_cursor_timeout=True):
             if int(z):
                 num[x] += 1
                 
-for i, d in sorted(den.iteritems()):
-    print i, num[i] / float(d)
+for i, d in sorted(den.items()):
+    print(i, num[i] / float(d))
 
-print ''
+print('')

@@ -32,7 +32,7 @@ def make_row(sentence, rhyme_words):
 collection = mongo_collection()
 for document in collection.find({"_id": poem_ids.STATS}).limit(1):
 
-    print >> sys.stderr, document['_id']
+    print(document['_id'], file=sys.stderr)
     
     n_sentences = len(document['analyzed'])
     row_list = []

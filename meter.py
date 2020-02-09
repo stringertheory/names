@@ -44,10 +44,10 @@ collection = mongo_collection()
 for document in collection.find(no_cursor_timeout=True).sort("_id", pymongo.DESCENDING).batch_size(5):
     
     if 'analyzed' in document:
-        print >> sys.stderr, 'skipping %s' % document['_id']
+        print('skipping %s' % document['_id'], file=sys.stderr)
         continue
     else:
-        print >> sys.stderr, 'analyzing %s' % document['_id']
+        print('analyzing %s' % document['_id'], file=sys.stderr)
     
     normalized = [word_tokenize(sentence) for sentence in document['text']]
 
@@ -91,7 +91,7 @@ for document in collection.find(no_cursor_timeout=True).sort("_id", pymongo.DESC
 
         row = '<div class="diagram sentence">%s</div>' % ''.join(block_list)
         row_list.append(row)
-        print >> sys.stderr, ''.join(terminal)
+        print(''.join(terminal), file=sys.stderr)
 
     diagram = '<div class="diagram container">%s</div>' % ''.join(row_list)
 

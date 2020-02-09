@@ -44,7 +44,7 @@ def sylcount(text):
 	    count += 1
 	if count == 0:
 	    count += 1
-        print text, count
+        print(text, count)
 	return count
 
 def my(word):
@@ -61,12 +61,12 @@ for i in range(1, 7):
         for word in words:
             c = my(word)
             if c != i:
-                print word, i, c
+                print(word, i, c)
         correct = sum(my(word) == i for word in words)
     total = len(words)
-    print("%s: %s correct out of %s (%.2f%%)" % (i, correct, total, 100*correct/total))
+    print(("%s: %s correct out of %s (%.2f%%)" % (i, correct, total, 100*correct/total)))
     overallCorrect += correct
     overallTotal += total
 
 print()
-print("%s correct out of %s (%.2f%%)" % (overallCorrect, overallTotal, 100*overallCorrect/overallTotal))
+print(("%s correct out of %s (%.2f%%)" % (overallCorrect, overallTotal, 100*overallCorrect/overallTotal)))

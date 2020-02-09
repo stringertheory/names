@@ -53,7 +53,7 @@ directory = sys.argv[1]
 filename_list = os.listdir(directory)
 for index, filename in enumerate(filename_list):
     path = os.path.join(directory, filename)
-    print >> sys.stderr, index, len(filename_list), filename
+    print(index, len(filename_list), filename, file=sys.stderr)
     with open(path) as infile:
         soup = bs4.BeautifulSoup(infile, 'lxml')
         title = soup.find('div', {'id': 'poem-top'}).find('h1').get_text()

@@ -119,7 +119,7 @@ def dm(st) :
 						nxt = ('K', 2)
 					else : # default for 'C'
 						nxt = ('K', 1)
-		elif ch == u'Ç' :
+		elif ch == 'Ç' :
 			nxt = ('S', 1)
 		elif ch == 'D' :
 			if st[pos:pos+2] == 'DG' :
@@ -257,7 +257,7 @@ def dm(st) :
 				nxt = ('N', 2)
 			else :
 				nxt = ('N', 1)
-		elif ch == u'Ñ' :
+		elif ch == 'Ñ' :
 			nxt = ('N', 1)
 		elif ch == 'P' :
 			if st[pos+1] == 'H' :
@@ -432,5 +432,5 @@ if __name__ == '__main__' :
         , 'maisey':('MS', None), 'zhang':('JNK', None), 'Chile':('XL', None)\
         ,'Jose':('HS', None), 'Arnow':('ARN','ARNF'), 'solilijs':('SLLS', None)\
 		, 'Parachute':('PRKT', None), 'Nowhere':('NR', None), 'Tux':('TKS', None)}
-	for name in names.keys() :
+	for name in list(names.keys()) :
 		assert (dm(name) == names[name]), 'For "%s" function returned %s. Should be %s.' % (name, dm(name), names[name])

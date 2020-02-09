@@ -11,6 +11,6 @@ def mongo_collection():
 counter = collections.Counter()
 collection = mongo_collection()
 for index, i in enumerate(collection.find({'POETIC TERMS': 'Sonnet'})):
-    print index, len(i['text']), i['_id']
+    print(index, len(i['text']), i['_id'])
 
 

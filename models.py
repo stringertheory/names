@@ -29,7 +29,7 @@ class Poem(object):
     def get_rhymes(self):
         rhymes = self.document.get('rhymes', {})
         result = {}
-        for key, value_list in rhymes.iteritems():
+        for key, value_list in rhymes.items():
             key = self._string_to_pair(key)
             value_list = [self._string_to_pair(value) for value in value_list]
             result[key] = value_list
@@ -43,7 +43,7 @@ class Poem(object):
             rhymes_a = utils.rhymes(word_a)
             for position_b, word_b in positions[(index+1):]:
                 if word_b in rhymes_a:
-                    print word_a, word_b, position_a, position_b
+                    print(word_a, word_b, position_a, position_b)
                     key = '%i,%i' % position_a
                     value = '%i,%i' % position_b
                     try:
@@ -58,4 +58,4 @@ class Poem(object):
         try:
             self.collection.save(self.document)
         except pymongo.errors.DocumentTooLarge:
-            print >> sys.stderr, "{'_id': {}} too large".format(self.id)
+            print("{'_id': {}} too large".format(self.id), file=sys.stderr)

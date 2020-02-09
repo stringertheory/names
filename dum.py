@@ -21,5 +21,5 @@ for index, (word, count) in enumerate(counter.most_common(), 1):
     else:
         msg = '%i\t%i\t%i\t%s' % (index, rank, count, word)
         rank += 1
-    print msg.encode('utf8')
+    print(msg.encode('utf8'))
 

@@ -63,9 +63,9 @@ def phones_for_word(word):
 
 with open(sys.argv[1]) as infile:
     for line in infile:
-        print line
+        print(line)
         word = line.strip().split()[0]
-        print word, phones_for_word(word)
+        print(word, phones_for_word(word))
     
 # words = [
 #     "mountain-side",
