@@ -1,10 +1,10 @@
 
-import functools32
+import functools
 import pymongo
 
 db = pymongo.MongoClient().poetry
 
-@functools32.lru_cache(maxsize=2**20)
+@functools.lru_cache(maxsize=2**20)
 def rhymes(word):
     
     query_result = db.rhymes.find_one({'word': word})

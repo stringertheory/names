@@ -1,19 +1,19 @@
 import sys
 
-import functools32
+import functools
 import pronouncing
 import editdistance
 
 pronouncing.init_cmu()
 
-@functools32.lru_cache()
+@functools.lru_cache()
 def phones_for_closest_match(word):
     """Brute force. Look for lowest distance between all words that are in
     the CMU dictionary.
 
     """
     by_distance = []
-    for possibility in pronouncing.pronunciations:
+    for possibility, phones in pronouncing.pronunciations:
 
         # levenstein
         distance = editdistance.eval(possibility, word)
@@ -32,9 +32,9 @@ def phones_for_closest_match(word):
     d_edit, d_length, suggestion = min(by_distance)
 
     # return the suggestion and the phones for the suggestion
-    return suggestion, pronouncing.phones_for_word(suggestion)
+    return suggestion, phones
 
-@functools32.lru_cache()
+@functools.lru_cache()
 def phones_for_word(word):
     """Look up a word in the CMU dictionary for it's phones. If it's not
     in there, first deal with hyphens and then use an approximate

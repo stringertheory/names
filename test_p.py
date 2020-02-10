@@ -13,6 +13,7 @@ print(pronouncing.rhymes(WORD))
 
 metaphone_to_word = collections.defaultdict(set)
 for word in pronouncing.pronunciations:
+    print(word)
     encoded = word.encode('utf8')
     for dm in double_metaphone.dm(encoded):
         if dm:

@@ -15,6 +15,11 @@ frozen-flask = "*"
 flask-assets = "*"
 flask-pymongo = "*"
 jsmin = "*"
+pronouncing = "*"
+editdistance = "*"
+pyenchant = "*"
+termcolor = "*"
+unidecode = "*"
 
 [requires]
 python_version = "3.8"

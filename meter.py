@@ -41,7 +41,7 @@ def stress_pattern(phones):
     return pronouncing.stresses(''.join(p for p in phones))
 
 collection = mongo_collection()
-for document in collection.find(no_cursor_timeout=True).sort("_id", pymongo.DESCENDING).batch_size(5):
+for document in collection.find({'_id': 152073}, no_cursor_timeout=True).sort("_id", pymongo.DESCENDING).batch_size(5):
     
     if 'analyzed' in document:
         print('skipping %s' % document['_id'], file=sys.stderr)
@@ -49,8 +49,8 @@ for document in collection.find(no_cursor_timeout=True).sort("_id", pymongo.DESC
     else:
         print('analyzing %s' % document['_id'], file=sys.stderr)
     
-    normalized = [word_tokenize(sentence) for sentence in document['text']]
-
+    normalized = [word_tokenize(sentence) for sentence in document['lines']]
+    
     approximate = []
     phones = []
     for sentence in normalized:
@@ -72,13 +72,13 @@ for document in collection.find(no_cursor_timeout=True).sort("_id", pymongo.DESC
             }
             sentence.append(word)
         analyzed.append(sentence)
-    
+
     document['analyzed'] = analyzed
     document['stresses'] = stresses
-    collection.save(document)
+    # collection.save(document)
     
     row_list = []
-    for signal in stresses:
+    for signal, line in zip(stresses, document['lines']):
         terminal = []
         block_list = []
         for i in signal:
@@ -101,13 +101,14 @@ for document in collection.find(no_cursor_timeout=True).sort("_id", pymongo.DESC
         outfile.write('<link rel="stylesheet" type="text/css" href="diagram.css">')
         outfile.write('</head>')
         outfile.write('<body>')
-        outfile.write(document['html'].encode('utf8'))
+        outfile.write(document['html'])
         outfile.write('\n')
         outfile.write(diagram)
         outfile.write('\n')
         outfile.write('</body>')
         outfile.write('</html>')
 
+    break
     # c_a, c_d = pywt.dwt(signal, 'haar')
     #     for i, j in enumerate(signal):
     #         print i, j
