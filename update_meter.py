@@ -41,9 +41,9 @@ def stress_pattern(phones):
     return pronouncing.stresses(''.join(p for p in phones))
 
 collection = mongo_collection()
-for document in collection.find({'_id': 152073}, no_cursor_timeout=True).sort("_id", pymongo.DESCENDING).batch_size(5):
+for index, document in enumerate(collection.find(no_cursor_timeout=True).sort("_id", pymongo.DESCENDING).batch_size(5), 1):
     
-    if 'analyzed' in document:
+    if 'analyzed' in document or not 'lines' in document:
         print('skipping %s' % document['_id'], file=sys.stderr)
         continue
     else:
@@ -75,7 +75,11 @@ for document in collection.find({'_id': 152073}, no_cursor_timeout=True).sort("_
 
     document['analyzed'] = analyzed
     document['stresses'] = stresses
-    # collection.save(document)
+    collection.update_one(
+        {'_id': document.get('_id')},
+        {'$set': {'analyzed': analyzed, 'stresses': stresses}},
+    )
+    print(index, 'inserted', document['_id'])
     
     row_list = []
     for signal, line in zip(stresses, document['lines']):
@@ -108,7 +112,6 @@ for document in collection.find({'_id': 152073}, no_cursor_timeout=True).sort("_
         outfile.write('</body>')
         outfile.write('</html>')
 
-    break
     # c_a, c_d = pywt.dwt(signal, 'haar')
     #     for i, j in enumerate(signal):
     #         print i, j
