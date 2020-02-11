@@ -1,17 +1,19 @@
-
+import pronouncing
 import functools
 import pymongo
 
-db = pymongo.MongoClient().poetry
+pronouncing.init_cmu()
+
+DB = pymongo.MongoClient().poetry
 
 @functools.lru_cache(maxsize=2**20)
 def rhymes(word):
     
-    query_result = db.rhymes.find_one({'word': word})
+    query_result = DB.rhymes.find_one({'word': word})
 
     if query_result is None:
         result = pronouncing.rhymes(word)
-        db.rhymes.save({'word': word, 'rhymes': list(result)})
+        DB.rhymes.save({'word': word, 'rhymes': list(result)})
 
     else:
         result = set(query_result['rhymes'])

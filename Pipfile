@@ -20,6 +20,7 @@ editdistance = "*"
 pyenchant = "*"
 termcolor = "*"
 unidecode = "*"
+psutil = "*"
 
 [requires]
 python_version = "3.8"

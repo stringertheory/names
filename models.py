@@ -6,10 +6,10 @@ import utils
 
 class Poem(object):
 
-    def __init__(self, document, db, collection='poems'):
+    def __init__(self, document, collection):
         self.id = document['_id']
         self.document = document
-        self.collection = getattr(db, collection)
+        self.collection = collection
         
     def positions(self, attr='closest'):
         result = []
@@ -36,26 +36,29 @@ class Poem(object):
         return result
 
     def set_rhymes(self):
-
-        rhymes = {}
+        self.rhymes = {}
         positions = self.positions()
         for index, (position_a, word_a) in enumerate(positions):
             rhymes_a = utils.rhymes(word_a)
+            print(self.id, position_a, word_a, index, len(positions))
             for position_b, word_b in positions[(index+1):]:
                 if word_b in rhymes_a:
-                    print(word_a, word_b, position_a, position_b)
                     key = '%i,%i' % position_a
                     value = '%i,%i' % position_b
                     try:
-                        rhymes[key].append(value)
+                        self.rhymes[key].append(value)
                     except KeyError:
-                        rhymes[key] = [value]
+                        self.rhymes[key] = [value]
 
-        self.document['rhymes'] = rhymes
+        self.document['rhymes'] = self.rhymes
         self.save()
         
     def save(self):
         try:
-            self.collection.save(self.document)
-        except pymongo.errors.DocumentTooLarge:
-            print("{'_id': {}} too large".format(self.id), file=sys.stderr)
+            self.collection.update_one(
+                {'_id': self.id},
+                {'$set': {'rhymes': self.rhymes}},
+            )
+        except Exception as e:
+            print(e, file=sys.stderr)
+            
