@@ -41,5 +41,11 @@
     background: white;
 }
 .color-1 {
-    background: lightblue;
+    background: #7fc97f;
+}
+.color-2 {
+    background: #beaed4;
+}
+.color-3 {
+    background: #fdc086;
 }

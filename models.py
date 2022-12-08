@@ -1,6 +1,8 @@
+import collections
 import sys
 
 import pymongo
+import pronouncing
 
 import utils
 
@@ -11,12 +13,13 @@ class Poem(object):
         self.document = document
         self.collection = collection
         
-    def positions(self, attr='closest'):
+    def positions(self, attr='phones'):
         result = []
-        analyzed = self.document.get('analyzed', [])
+        analyzed = self.document.get('phones', [])
         for sentence_index, sentence in enumerate(analyzed):
             for word_index, word_obj in enumerate(sentence):
-                result.append(((sentence_index, word_index), word_obj[attr]))
+                r = set(pronouncing.rhyming_part(_) for _ in word_obj[attr])
+                result.append(((sentence_index, word_index), r))
         return result
 
     def _pair_to_string(self, pair):
@@ -38,19 +41,19 @@ class Poem(object):
     def set_rhymes(self):
         self.rhymes = {}
         positions = self.positions()
-        for index, (position_a, word_a) in enumerate(positions):
-            rhymes_a = utils.rhymes(word_a)
-            print(self.id, position_a, word_a, index, len(positions))
-            for position_b, word_b in positions[(index+1):]:
-                if word_b in rhymes_a:
-                    key = '%i,%i' % position_a
-                    value = '%i,%i' % position_b
-                    try:
-                        self.rhymes[key].append(value)
-                    except KeyError:
-                        self.rhymes[key] = [value]
+        for index, (position_a, rp_a) in enumerate(positions):
+            print(self.id, position_a, rp_a, index, len(positions))
+            for position_b, rp_b in positions:
+                if rp_a.intersection(rp_b):
+                    sa, wa = position_a
+                    sb, wb = position_b
+                    self.document['phones'][sa][wa]['rhymes_with'].append([sb,wb])
+                    self.document['phones'][sb][wb]['rhymes_with'].append([sa,wa])
 
-        self.document['rhymes'] = self.rhymes
+        pprint.pprint(document)
+        import pdb
+        pdb.set_trace()
+        raise 'STOP'
         self.save()
         
     def save(self):
@@ -61,4 +64,14 @@ class Poem(object):
             )
         except Exception as e:
             print(e, file=sys.stderr)
+
+# ['beers', 'tears', 'hairs']
             
+# this is a test
+# better than all the rest
+
+# 0: 0 1 2 3
+# 1: 0 1 2 3 4
+
+# (0, 0):
+# (0, 1): 

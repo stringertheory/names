@@ -8,6 +8,7 @@ WORD = "untrimmed"
 WORD = 'factorize'
 WORD = 'obscurantism'
 WORD = 'polyhedral'
+WORD = 'moderna'
 
 print(pronouncing.rhymes(WORD))
 

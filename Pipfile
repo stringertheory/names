@@ -15,12 +15,13 @@ frozen-flask = "*"
 flask-assets = "*"
 flask-pymongo = "*"
 jsmin = "*"
-pronouncing = "*"
 editdistance = "*"
 pyenchant = "*"
 termcolor = "*"
 unidecode = "*"
 psutil = "*"
+pronouncing = {editable = true,git = "https://github.com/aparrish/pronouncingpy"}
+biopython = "*"
 
 [requires]
 python_version = "3.8"

@@ -16,9 +16,9 @@ def mongo_collection():
     return collection
 
 
-def make_row(sentence, rhyme_words):
+def make_row(sentence, rhyme_index):
     block_list = []
-    for word_obj in sentence:
+    for word_index, word_obj in enumerate(sentence):
         if word_obj['closest'] in rhyme_words:
             color_index = 1
         else:
@@ -30,43 +30,51 @@ def make_row(sentence, rhyme_words):
     return row
 
 collection = mongo_collection()
-for document in collection.find({"_id": poem_ids.STATS}).limit(1):
+for document in collection.find({"_id": 55343}).limit(1):
 
     print(document['_id'], file=sys.stderr)
-    
-    n_sentences = len(document['analyzed'])
-    row_list = []
-    for line_number, sentence in enumerate(document['analyzed'][1:-1], 1):
-        line_number_before = line_number - 1
-        sentence_before = document['analyzed'][line_number_before]
-        line_number_after = line_number + 1
-        sentence_after = document['analyzed'][line_number_after]
+    for index, line in enumerate(document['analyzed']):
+        print(index, ' '.join(w['closest'] for w in line))
 
-        rhyme_words = set()
-        word_list = list(set(w['closest'] for w in sentence_before + sentence + sentence_after))
-        for index, word_a in enumerate(word_list):
-            rhymes_a = set(utils.rhymes(word_a))
-            for word_b in word_list[(index + 1):]:
-                if word_b in rhymes_a:
-                    rhyme_words.add(word_a)
-                    rhyme_words.add(word_b)
-
-        if line_number_before == 0:
-            row_list.append(make_row(sentence_before, rhyme_words))
-        row_list.append(make_row(sentence, rhyme_words))
-        if line_number_after == (n_sentences - 1):
-            row_list.append(make_row(sentence_after, rhyme_words))
-
+    colors = [1, 2, 3]
+    color_index = 0
+    rhyme_index = {}
+    for key, r_list in document['rhymes'].items():
+        sa, wa = tuple(int(_) for _ in key.split(','))
+        color = colors[color_index % len(colors)]
+        document['analyzed'][sa][wa]['color'] = color
+        print(document['analyzed'][sa][wa]['closest'], color, end=': ')
+        for r in r_list:
+            sb, wb = tuple(int(_) for _ in r.split(','))
+            word = document['analyzed'][sb][wb]
+            word['color'] = color
+            print(word['closest'], end=', ')
+        print()
             
-    diagram = '<div class="diagram container">%s</div>' % ''.join(row_list)
+        color_index += 1
 
-    with open('rhymes/%s.html' % document['_id'], 'w') as outfile:
+    row_list = []
+    for sentence_index, sentence in enumerate(document['analyzed']):
+        span_list = []
+        for word_index, word in enumerate(sentence):
+            color = word.get('color', 0)
+            closest = word['closest']
+            span = f'<span class="diagram word color-{color}">{closest}</span>'
+            span_list.append(span)
+        row = '<div class="diagram sentence">{}</div>'.format(''.join(span_list))
+        row_list.append(row)
+
+    diagram = '<div class="diagram container">{}</div>'.format(''.join(row_list))
+
+    filename = f'rhymes/{document["_id"]}.html'
+    print(filename)
+    with open(filename, 'w') as outfile:
         outfile.write('<html>')
         outfile.write('<head>')
         outfile.write('<link rel="stylesheet" type="text/css" href="diagram.css">')
         outfile.write('</head>')
         outfile.write('<body>')
-        outfile.write(document['html'].encode('utf8'))
+        outfile.write(document['html'])
         outfile.write('\n')
         outfile.write(diagram)
         outfile.write('\n')
